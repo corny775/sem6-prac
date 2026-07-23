@@ -1,51 +1,74 @@
-INF = float("inf")
+from math import inf
 
-try:
-    n = int(input("Enter number of routers: "))
-    if n <= 0:
-        raise ValueError
 
-    graph = [list(map(int, input().split())) for _ in range(n)]
+def read_graph():
+    vertices = int(input("Number of routers: "))
+    edges = int(input("Number of links: "))
 
-    src = int(input("Enter source router: "))
-    if src < 0 or src >= n:
-        raise ValueError
+    graph = {i: [] for i in range(vertices)}
+    print("Enter each link as: source destination cost")
+    for _ in range(edges):
+        u, v, w = map(int, input().split())
+        graph[u].append((v, w))
+        graph[v].append((u, w))
+    return graph, vertices
 
-    dist = graph[src][:]
-    visited = [False] * n
-    dist[src] = 0
-    visited[src] = True
+
+def show_table(distances):
+    print("Router\tDistance")
+    for node in sorted(distances):
+        value = "INF" if distances[node] == inf else distances[node]
+        print(f"{node}\t{value}")
+
+
+def dijkstra(graph, start):
+    distances = {node: inf for node in graph}
+    distances[start] = 0
+    visited = set()
 
     print("\nInitial Routing Table")
-    print("Router\tDistance")
-    for i in range(n):
-        print(i, "\t", dist[i])
+    print("-" * 48)
+    show_table(distances)
 
-    for step in range(n - 1):
-        m = INF
-        u = -1
+    while len(visited) < len(graph):
+        current_router = None
+        current_distance = inf
 
-        for i in range(n):
-            if not visited[i] and dist[i] < m:
-                m = dist[i]
-                u = i
+        for node in graph:
+            if node not in visited and distances[node] < current_distance:
+                current_distance = distances[node]
+                current_router = node
 
-        if u == -1:
+        if current_router is None:
             break
 
-        visited[u] = True
-        print(f"\nProcessing Router {u}")
+        visited.add(current_router)
+        print(f"\nAfter Processing Router {current_router}")
 
-        for v in range(n):
-            if not visited[v] and graph[u][v] != 9999:
-                if dist[u] + graph[u][v] < dist[v]:
-                    print(f"Updating {v}: {dist[v]} -> {dist[u] + graph[u][v]}")
-                    dist[v] = dist[u] + graph[u][v]
+        for neighbor, cost in graph[current_router]:
+            new_distance = current_distance + cost
+            if new_distance < distances[neighbor]:
+                distances[neighbor] = new_distance
 
-        print("Routing Table")
-        print("Router\tDistance")
-        for i in range(n):
-            print(i, "\t", dist[i])
+        print("-" * 48)
+        show_table(distances)
 
-except:
-    print("Invalid Input")
+    print("\nFinal Shortest Path Table")
+    print("-" * 48)
+    print("Destination Router\tShortest Distance")
+    for node in sorted(distances):
+        value = "INF" if distances[node] == inf else distances[node]
+        print(f"{node}\t\t\t{value}")
+
+
+def main():
+    graph, _ = read_graph()
+    start = int(input("Start router: "))
+    if start not in graph:
+        print("Invalid start router")
+        return
+    dijkstra(graph, start)
+
+
+if __name__ == "__main__":
+    main()
